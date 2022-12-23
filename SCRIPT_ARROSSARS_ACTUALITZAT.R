@@ -18,7 +18,7 @@ library(spatialEco)
 
 setwd("C:/Users/david.munoz/OneDrive - ctfc.cat/arrossars") #Posem directori
 
-### RETALL MONTSIA ----------------------------------------------------------------
+### RETALL MONTSIA ---------------------------------------------------------------
 
 mont<-readOGR("SIGPAC/SIGPAC_22_Montsia_2022_shp/SIGPAC_22_Montsia.shp") #Obrim els SIGPAC directament descarregats. És lent. 
 #xmin, xmax,ymin,ymax
