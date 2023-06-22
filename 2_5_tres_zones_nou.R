@@ -843,7 +843,7 @@ features <- list_features[features]
 stack_tots<-stack(features)
 
 #HERE, CHANGE PROPOSTA 1 AND 2. THEN, ALSO CHANGE PUBLIC10alts/mitjans like 150 lines after. 
-spdf<-readOGR("C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTS/PROPOSTA_2/PROPOSTA_2_ID.shp")
+spdf<-readOGR("C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTS/PROPOSTA_1/PROPOSTA_1_ID.shp")
 
 # OBSERVATIONS: WE USE THE CENTER OF THE PIXELS ----
 
@@ -1017,7 +1017,7 @@ sum_by_zone_element_expanded <- merge(expanded_df, sum_by_zone_element, by = c("
 sum_by_zone_element_expanded$percentatge[is.na(sum_by_zone_element_expanded$percentatge)] <- 0
 spread_df <- spread(sum_by_zone_element_expanded, solucio, percentatge)
 
-NOVATAULA<- dplyr::left_join(public10_mitjans_ALTA[["Targets per espècies seleccionades"]], spread_df %>% select(element, ZRN, ZIC, "0"), by="element")
+NOVATAULA<- dplyr::left_join(public10_alts_mitjana[["Targets per espècies seleccionades"]], spread_df %>% select(element, ZRN, ZIC, "0"), by="element")
 #NOVATAULA$zona_1*100 - NOVATAULA$ZRN Comprovació que els resultats són molt similars, però millors aquí, respecte la taula anterior
 
 NOVATAULA$tipus_informacio<-ifelse(NOVATAULA$element=="Phylloscopus collybita", "SDM", NOVATAULA$tipus_informacio)
@@ -1028,22 +1028,41 @@ NOVATAULA$tipus_informacio <- ifelse(NOVATAULA$element %in% c(noms_canviar), "ob
 NOVATAULA<-NOVATAULA[ , !names(NOVATAULA) %in% c("zona_1","zona_2","suma")]
 NOVATAULA$suma <- apply(NOVATAULA[, c("ZRN", "ZIC")], 1, sum)
 
-tot_proposta2<-tot
-proposta2<-NOVATAULA
+
+#Eliminar columnes del tesaure (tot_proposta) i afegir si les conques estan bloquejades al SHP. Separar-ho en proposta 1 i 2
+tot_proposta1<-tot
+
+proposta1<-NOVATAULA
+proposta1$`area_ocupacio (ha)` <- tot_proposta1$total_area[match(proposta1$element, tot_proposta1$element)]
+
+tot_proposta1<-subset(tot_proposta1, select=c("id", "id_simsy", "element", "percentatge"))
+
+proposta1$num_PUs <- row_counts[as.character(proposta1$element)]
+
+
+spdf <- merge(spdf, PU_conques[c("id", "locked_in", "lock_out")], by = "id", all.x = TRUE)
+spdf_proposta1<-spdf
+
+#desired_order <- c("id", "solucio", "area", "locked_in", "lock_out") Si cal canviar ordres
+#reordered_spdf <- spdf_proposta2[, c(desired_order, setdiff(names(spdf_proposta2), desired_order))]
+
 
 
 #EXPORT
-tot_proposta1<-as.data.frame(tot_proposta1)
-tot_proposta2<-as.data.frame(tot_proposta2)
-write.dbf(tot_proposta1, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_1/TESAURE_PROPOSTA_1.dbf", factor2char = TRUE, max_nchar = 254)
-write.dbf(tot_proposta2, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_2/TESAURE_PROPOSTA_2.dbf", factor2char = TRUE, max_nchar = 254)
 
 write.xlsx(tot_proposta1, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_1/TESAURE_PROPOSTA_1.xlsx")
 write.xlsx(tot_proposta2, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_2/TESAURE_PROPOSTA_2.xlsx")
 
+
 write.xlsx(proposta1, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_1/PROPOSTA_1.xlsx")
 write.xlsx(proposta2, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_2/PROPOSTA_2.xlsx")
-# 
+
+
+writeOGR(spdf_proposta1, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_1", layer = "PROPOSTA_1", driver = "ESRI Shapefile") 
+writeOGR(reordered_spdf, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_2", layer = "PROPOSTA_2", driver = "ESRI Shapefile", overwrite_layer = T) 
+
+
+
 # #Old way (cutre)
 # 
 # zona3$elements_coberts <- NA
