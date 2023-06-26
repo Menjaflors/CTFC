@@ -16,7 +16,8 @@ options(warn=1)
 
 list.of.packages <- c("tidyverse", "readr", "rgdal", "sp", "raster", "sf", "rgeos", "prioritizr", "readxl",
                       "maptools", "PBSmapping", "pbapply", "tools", "DescTools", "Rsymphony", "spdep", "openxlsx", "tidyr",
-                      "climateStability", "spdep", "parallel", "foreach", "zoom", "ggplot2","RColorBrewer","gurobi","doParallel")
+                      "climateStability", "spdep", "parallel", "foreach", "zoom", "ggplot2","RColorBrewer","gurobi","doParallel",
+                      "htmlwidgets", "terra", "geodata", "leaflet", "leafpop", "leaflet.extras", "leafem", "leaflet.minicharts")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)>0) {install.packages(new.packages)}
 
@@ -1077,7 +1078,7 @@ opacity_values <- function(solucio) {
 pal <- colorFactor(palette = c("#ffffff", "#b2df8a", "#006400"), 
                    levels = c("0", "ZIC", "ZRN"))
 
-library(htmlwidgets)
+
 
 leaflet() |>
   addProviderTiles(providers$Esri.WorldImagery, group = "Esri.WorldImagery") |>
