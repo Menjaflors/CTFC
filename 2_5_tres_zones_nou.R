@@ -1061,7 +1061,65 @@ write.xlsx(proposta2, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MON
 writeOGR(spdf_proposta1, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_1", layer = "PROPOSTA_1", driver = "ESRI Shapefile") 
 writeOGR(reordered_spdf, "C:/Users/david.munoz/OneDrive - ctfc.cat/PLANIFICACIO_MONTSENY/Pla_Proteccio_MSY/RESULTATS_NOUS/PROPOSTA_2", layer = "PROPOSTA_2", driver = "ESRI Shapefile", overwrite_layer = T) 
 
+ambit_PNkk<-spTransform(ambit_PN, crs("EPSG:4326"))
+proposta1kk<-spTransform(spdf_proposta1, crs("EPSG:4326"))
+proposta2kk<-spTransform(spdf_proposta2, crs("EPSG:4326"))
 
+opacity_values <- function(solucio) {
+  # Define opacity values for each level in solucio
+  # Customize the opacity values as per your requirements
+  opacity <- ifelse(solucio == "0", 0.5,
+                    ifelse(solucio == "ZIC", 0.7,
+                           ifelse(solucio == "ZRN", 0.7, 1)))
+  return(opacity)
+}
+
+pal <- colorFactor(palette = c("#ffffff", "#b2df8a", "#006400"), 
+                   levels = c("0", "ZIC", "ZRN"))
+
+library(htmlwidgets)
+
+leaflet() |>
+  addProviderTiles(providers$Esri.WorldImagery, group = "Esri.WorldImagery") |>
+  addProviderTiles(providers$OpenStreetMap, group = "OpenStreetMap") |>
+  addProviderTiles(providers$OpenTopoMap, group = "OpenTopoMap") |>
+  addProviderTiles(providers$Stamen.Terrain, group = "Stamen.Terrain") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Esri.NatGeoWorldMap") |>
+  addLayersControl(baseGroups = c("Blanc","OpenStreetMap","Esri.WorldImagery","OpenTopoMap", "Stamen.Terrain", "Esri.NatGeoWorldMap"), overlayGroups = c("proposta 1", "proposta 2"), options = layersControlOptions(collapsed = F))|>  # try also collapsed = TRUE
+  addPolygons(data = ambit_PNkk, col="white", opacity = 0.6, weight = 2)|>
+  addPolygons(data = proposta1kk, popup = leafpop::popupTable(proposta1kk), col="black", fillColor = ~ pal(solucio), weight = 1, opacity = 0.3, fillOpacity = opacity_values(proposta1kk$solucio), group = "proposta 1", smoothFactor = 0)|>
+  addPolygons(data = proposta2kk, popup = leafpop::popupTable(proposta2kk), col="black", fillColor = ~ pal(solucio), weight = 1, opacity = 0.3, fillOpacity = opacity_values(proposta2kk$solucio), group = "proposta 2", smoothFactor = 0)|>
+  hideGroup("proposta 1") |> # try also without this
+  leaflet.extras::addSearchOSM() |>
+  addMiniMap(position = "bottomleft") |>
+  addScaleBar(position = "bottomright") |>
+  leafem::addHomeButton(group = "proposta 1", position = "bottomright")|>
+  addLegend(position = "bottomright", colors = c("#ffffff", "#b2df8a", "#006400"),labels = c("0", "ZIC", "ZRN")) |>
+  onRender("function(el, x) {el.style.background = '#FFF';}")|> #Afegir el fons blanc
+  addControl(html = "<input id=\"OpacitySlide\" type=\"range\" min=\"0\" max=\"1\" step=\"0.1\" value=\"0.5\">") |>   # Add Slider
+  htmlwidgets::onRender(
+    "function(el,x,data){
+                     var map = this;
+                     var evthandler = function(e){
+                        var layers = map.layerManager.getVisibleGroups();
+                        console.log('VisibleGroups: ', layers); 
+                        console.log('Target value: ', +e.target.value);
+                        layers.forEach(function(group) {
+                          var layer = map.layerManager._byGroup[group];
+                          console.log('currently processing: ', group);
+                          Object.keys(layer).forEach(function(el){
+                            if(layer[el] instanceof L.Polygon){;
+                            console.log('Change opacity of: ', group, el);
+                             layer[el].setStyle({fillOpacity:+e.target.value});
+                            }
+                          });
+                          
+                        })
+                     };
+              $('#OpacitySlide').mousedown(function () { map.dragging.disable(); });
+              $('#OpacitySlide').mouseup(function () { map.dragging.enable(); });
+              $('#OpacitySlide').on('input', evthandler)}
+          ")
 
 # #Old way (cutre)
 # 
